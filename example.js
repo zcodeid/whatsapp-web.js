@@ -7,12 +7,15 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
     sessionCfg = require(SESSION_FILE_PATH);
 }
 
-const client = new Client({ puppeteer: { headless: false }, session: sessionCfg });
+const client = new Client({
+    puppeteer: { headless: false },
+    session: sessionCfg
+});
 // You can use an existing session and avoid scanning a QR code by adding a "session" object to the client options.
 // This object must include WABrowserId, WASecretBundle, WAToken1 and WAToken2.
 
 // You also could connect to an existing instance of a browser
-// { 
+// {
 //    puppeteer: {
 //        browserWSEndpoint: `ws://localhost:3000`
 //    }
@@ -27,7 +30,7 @@ client.on('qr', (qr) => {
 
 client.on('authenticated', (session) => {
     console.log('AUTHENTICATED', session);
-    sessionCfg=session;
+    sessionCfg = session;
     fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), function (err) {
         if (err) {
             console.error(err);
@@ -35,7 +38,7 @@ client.on('authenticated', (session) => {
     });
 });
 
-client.on('auth_failure', msg => {
+client.on('auth_failure', (msg) => {
     // Fired if session restore was unsuccessfull
     console.error('AUTHENTICATION FAILURE', msg);
 });
@@ -44,17 +47,15 @@ client.on('ready', () => {
     console.log('READY');
 });
 
-client.on('message', async msg => {
+client.on('message', async (msg) => {
     console.log('MESSAGE RECEIVED', msg);
 
     if (msg.body === '!ping reply') {
         // Send a new message as a reply to the current one
         msg.reply('pong');
-
     } else if (msg.body === '!ping') {
         // Send a new message to the same chat
         client.sendMessage(msg.from, 'pong');
-
     } else if (msg.body.startsWith('!sendto ')) {
         // Direct send a new message to specific id
         let number = msg.body.split(' ')[1];
@@ -64,7 +65,6 @@ client.on('message', async msg => {
         let chat = await msg.getChat();
         chat.sendSeen();
         client.sendMessage(number, message);
-
     } else if (msg.body.startsWith('!subject ')) {
         // Change the group subject
         let chat = await msg.getChat();
@@ -121,13 +121,16 @@ client.on('message', async msg => {
         client.sendMessage(msg.from, `The bot has ${chats.length} chats open.`);
     } else if (msg.body === '!info') {
         let info = client.info;
-        client.sendMessage(msg.from, `
+        client.sendMessage(
+            msg.from,
+            `
             *Connection info*
             User name: ${info.pushname}
             My number: ${info.me.user}
             Platform: ${info.platform}
             WhatsApp version: ${info.phone.wa_version}
-        `);
+        `
+        );
     } else if (msg.body === '!mediainfo' && msg.hasMedia) {
         const attachmentData = await msg.downloadMedia();
         msg.reply(`
@@ -150,11 +153,16 @@ client.on('message', async msg => {
         const quotedMsg = await msg.getQuotedMessage();
         if (quotedMsg.hasMedia) {
             const attachmentData = await quotedMsg.downloadMedia();
-            client.sendMessage(msg.from, attachmentData, { caption: 'Here\'s your requested media.' });
+            client.sendMessage(msg.from, attachmentData, {
+                caption: "Here's your requested media."
+            });
         }
     } else if (msg.body === '!location') {
-        msg.reply(new Location(37.422, -122.084, 'Googleplex\nGoogle Headquarters'));
+        msg.reply(
+            new Location(37.422, -122.084, 'Googleplex\nGoogle Headquarters')
+        );
     } else if (msg.location) {
+        console.log(msg.location);
         msg.reply(msg.location);
     } else if (msg.body.startsWith('!status ')) {
         const newStatus = msg.body.split(' ')[1];
@@ -205,11 +213,30 @@ client.on('message', async msg => {
             client.interface.openChatWindowAt(quotedMsg.id._serialized);
         }
     } else if (msg.body === '!buttons') {
-        let button = new Buttons('Button body',[{body:'bt1'},{body:'bt2'},{body:'bt3'}],'title','footer');
+        let button = new Buttons(
+            'Button body',
+            [{ body: 'bt1' }, { body: 'bt2' }, { body: 'bt3' }],
+            'title',
+            'footer'
+        );
         client.sendMessage(msg.from, button);
     } else if (msg.body === '!list') {
-        let sections = [{title:'sectionTitle',rows:[{title:'ListItem1', description: 'desc'},{title:'ListItem2'}]}];
-        let list = new List('List body','btnText',sections,'Title','footer');
+        let sections = [
+            {
+                title: 'sectionTitle',
+                rows: [
+                    { title: 'ListItem1', description: 'desc' },
+                    { title: 'ListItem2' }
+                ]
+            }
+        ];
+        let list = new List(
+            'List body',
+            'btnText',
+            sections,
+            'Title',
+            'footer'
+        );
         client.sendMessage(msg.from, list);
     }
 });
@@ -245,7 +272,7 @@ client.on('message_ack', (msg, ack) => {
         ACK_PLAYED: 4
     */
 
-    if(ack == 3) {
+    if (ack == 3) {
         // The message was read
     }
 });
@@ -273,11 +300,10 @@ client.on('change_battery', (batteryInfo) => {
     console.log(`Battery: ${battery}% - Charging? ${plugged}`);
 });
 
-client.on('change_state', state => {
-    console.log('CHANGE STATE', state );
+client.on('change_state', (state) => {
+    console.log('CHANGE STATE', state);
 });
 
 client.on('disconnected', (reason) => {
     console.log('Client was logged out', reason);
 });
-
